@@ -1,5 +1,5 @@
 const express = require("express");
-const mysql2 = require("mysql2");
+const mysql = require("mysql2/promise");
 const dotenv = require("dotenv");
 
 dotenv.config({ path: './.env' });
@@ -7,57 +7,96 @@ dotenv.config({ path: './.env' });
 const app = express();
 app.use(express.json());
 
-const db = mysql2.createConnection({
+const pool = mysql.createPool({
   host: process.env.HOST,
   user: process.env.USER,
   password: process.env.PASSWORD,
   database: process.env.DB_DATABASE,
-});
-let p;
-db.connect((error) => {
-  if (error) {
-    console.error('Error connecting to MySQL:', error);
-  } else {
-    console.log("MySQL is connected...");
-  }
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-// API endpoint for receiving registration number and date of birth
-app.post('/getdata', (req, res) => {
-  const { reg_no, dateofbirth } = req.body;
+const queryAsync = async (sql, values) => {
+  const connection = await pool.getConnection();
+  try {
+    const [rows] = await connection.query(sql, values);
+    return rows;
+  } finally {
+    connection.release();
+  }
+};
+
+app.get('/StudentInfo', async (req, res) => {
+  const { reg_no, dateofbirth } = req.query
+
+  // Validate inputs
   if (!reg_no || !dateofbirth) {
     res.status(400).json({ error: 'Bad Request: Registration number and date of birth are required' });
     return;
   }
-  p=reg_no;
-  // Assuming you want to send JSON response with reg_no
-  res.json({ reg_no });
+
+  try {
+    const results = await queryAsync('SELECT * FROM studentinfo WHERE reg_no = ? AND date_of_birth = ?', [reg_no, dateofbirth]);
+
+    if (results.length === 0) {
+      res.status(404).json({ error: 'Record not found' });
+    } else {
+      res.json(results);
+    }
+  } catch (error) {
+    console.error('Error executing MySQL query:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
-// API endpoint for retrieving results based on registration number
-app.get('/getResults', (req, res) => {
-  const reg_no = p;
+app.get('/getResultsfirst', async (req, res) => {
+  const {reg_no} = req.query;
+
+  // Validate reg_no format if needed
 
   if (!reg_no) {
     res.status(400).json({ error: 'Bad Request: Registration number is required' });
     return;
   }
 
-  db.query('SELECT * FROM result WHERE reg_no = ?', [reg_no], (err, results) => {
-    if (err) {
-      console.error('Error executing MySQL query:', err);
-      res.status(500).json({ error: 'Internal Server Error' });
-    } else if (results.length === 0) {
+  try {
+    const results = await queryAsync('SELECT * FROM result WHERE reg_no = ?', [reg_no]);
+    if (results.length === 0) {
       res.status(404).json({ error: 'Record not found' });
     } else {
       res.json(results);
     }
-  });
+  } catch (error) {
+    console.error('Error executing MySQL query:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
-// Close the database connection when the application shuts down
+app.get('/getResultssceond', async (req, res) => {
+  const reg_no = req.query.reg_no;
+  
+  if (!reg_no) {
+    res.status(400).json({ error: 'Bad Request: Registration number is required' });
+    return;
+  }
+
+  const sem = '2nd';
+  try {
+    const results = await queryAsync('SELECT * FROM result WHERE reg_no = ? and semester = ?', [reg_no, sem]);
+    if (results.length === 0) {
+      res.status(404).json({ error: 'Record not found' });
+    } else {
+      res.json(results);
+    }
+  } catch (error) {
+    console.error('Error executing MySQL query:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 process.on('SIGINT', () => {
-  db.end((err) => {
+  pool.end((err) => {
     if (err) {
       console.error('Error closing MySQL connection:', err);
     } else {
