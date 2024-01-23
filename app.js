@@ -51,7 +51,7 @@ app.get('/StudentInfo', async (req, res) => {
 });
 
 app.get('/getResultsfirst', async (req, res) => {
-  const {reg_no} = req.query;
+  const {reg_no,semester} = req.query;
 
   // Validate reg_no format if needed
 
@@ -61,7 +61,7 @@ app.get('/getResultsfirst', async (req, res) => {
   }
 
   try {
-    const results = await queryAsync('SELECT * FROM result WHERE reg_no = ?', [reg_no]);
+    const results = await queryAsync('SELECT * FROM result WHERE reg_no = ? AND semester = ?', [reg_no,semester]);
     if (results.length === 0) {
       res.status(404).json({ error: 'Record not found' });
     } else {
@@ -73,27 +73,6 @@ app.get('/getResultsfirst', async (req, res) => {
   }
 });
 
-app.get('/getResultssceond', async (req, res) => {
-  const reg_no = req.query.reg_no;
-  
-  if (!reg_no) {
-    res.status(400).json({ error: 'Bad Request: Registration number is required' });
-    return;
-  }
-
-  const sem = '2nd';
-  try {
-    const results = await queryAsync('SELECT * FROM result WHERE reg_no = ? and semester = ?', [reg_no, sem]);
-    if (results.length === 0) {
-      res.status(404).json({ error: 'Record not found' });
-    } else {
-      res.json(results);
-    }
-  } catch (error) {
-    console.error('Error executing MySQL query:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
 
 process.on('SIGINT', () => {
   pool.end((err) => {
