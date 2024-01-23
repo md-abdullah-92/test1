@@ -13,8 +13,8 @@ const pool = mysql.createPool({
   password: process.env.PASSWORD,
   database: process.env.DB_DATABASE,
   waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  connectionLimit: 40,
+  queueLimit: 2
 });
 
 const queryAsync = async (sql, values) => {
@@ -27,8 +27,33 @@ const queryAsync = async (sql, values) => {
   }
 };
 
+// Function to handle result retrieval
+const getResultBySemester = async (req, res, semester) => {
+  const { reg_no } = req.query;
+
+  // Validate reg_no format if needed
+
+  if (!reg_no) {
+    res.status(400).json({ error: 'Bad Request: Registration number is required' });
+    return;
+  }
+
+  try {
+    const results = await queryAsync('SELECT * FROM result WHERE reg_no = ? AND semester = ?', [reg_no, semester]);
+    if (results.length === 0) {
+      res.status(404).json({ error: 'Record not found' });
+    } else {
+      res.json(results);
+    }
+  } catch (error) {
+    console.error('Error executing MySQL query:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+// Define routes
 app.get('/StudentInfo', async (req, res) => {
-  const { reg_no, dateofbirth } = req.query
+  const { reg_no, dateofbirth } = req.query;
 
   // Validate inputs
   if (!reg_no || !dateofbirth) {
@@ -50,29 +75,26 @@ app.get('/StudentInfo', async (req, res) => {
   }
 });
 
-app.get('/getResultsfirst', async (req, res) => {
-  const {reg_no,semester} = req.query;
+app.get('/getResults/:semester', async (req, res) => {
+  const semester = req.params.semester;
 
-  // Validate reg_no format if needed
+  // Validate semester if needed
 
-  if (!reg_no) {
-    res.status(400).json({ error: 'Bad Request: Registration number is required' });
-    return;
-  }
-
-  try {
-    const results = await queryAsync('SELECT * FROM result WHERE reg_no = ? AND semester = ?', [reg_no,semester]);
-    if (results.length === 0) {
-      res.status(404).json({ error: 'Record not found' });
-    } else {
-      res.json(results);
-    }
-  } catch (error) {
-    console.error('Error executing MySQL query:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+  switch (semester) {
+    case '1st':
+    case '2nd':
+    case '3rd':
+    case '4th':
+    case '5th':
+    case '6th':
+    case '7th':
+    case '8th':
+      getResultBySemester(req, res, semester);
+      break;
+    default:
+      res.status(400).json({ error: 'Bad Request: Invalid semester' });
   }
 });
-
 
 process.on('SIGINT', () => {
   pool.end((err) => {
