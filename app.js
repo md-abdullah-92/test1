@@ -75,11 +75,33 @@ app.get('/StudentInfo', async (req, res) => {
   }
 });
 
+// Define routes
+app.get('/StudentFullResults', async (req, res) => {
+  const { reg_no} = req.query;
+
+  // Validate inputs
+  if (!reg_no) {
+    res.status(400).json({ error: 'Bad Request: Registration number and date of birth are required' });
+    return;
+  }
+
+  try {
+    const results = await queryAsync('SELECT * FROM result WHERE reg_no = ?', [reg_no]);
+
+    if (results.length === 0) {
+      res.status(404).json({ error: 'Record not found' });
+    } else {
+      res.json(results);
+    }
+  } catch (error) {
+    console.error('Error executing MySQL query:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.get('/getResults/:semester', async (req, res) => {
   const semester = req.params.semester;
-
   // Validate semester if needed
-
   switch (semester) {
     case '1st':
     case '2nd':
