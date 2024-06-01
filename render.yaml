@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: mysql-service
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: HOST
+        value: localhost
+      - key: USER
+        value: abdullah
+      - key: PASSWORD
+        value: 2020331092@abdullah
+      - key: DB_DATABASE
+        value: mydp
+      - key: PORT
+        value: 5001
