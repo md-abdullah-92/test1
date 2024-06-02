@@ -1,6 +1,7 @@
 const express = require("express");
 const mysql = require("mysql2/promise");
 const dotenv = require("dotenv");
+const fs = require("fs");
 
 dotenv.config({ path: './.env' });
 
@@ -12,20 +13,26 @@ const pool = mysql.createPool({
   user: process.env.USER,
   password: process.env.PASSWORD,
   database: process.env.DB_DATABASE,
-  waitForConnections: true,
-  connectionLimit: 40,
-  queueLimit: 2
+  port: 3306,
+  ssl: {
+    ca: fs.readFileSync("C:/Users/Hp/OneDrive/Desktop/node-mysql/DigiCertGlobalRootCA.crt.pem")
+  }
 });
 
 const queryAsync = async (sql, values) => {
-  const connection = await pool.getConnection();
+  let connection;
   try {
+    connection = await pool.getConnection();
     const [rows] = await connection.query(sql, values);
     return rows;
+  } catch (error) {
+    console.error('Error executing MySQL query:', error);
+    throw error;  // Re-throw the error after logging it
   } finally {
-    connection.release();
+    if (connection) connection.release();
   }
 };
+
 
 // Function to handle result retrieval
 const getResultBySemester = async (req, res, semester) => {
