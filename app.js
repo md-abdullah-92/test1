@@ -2,6 +2,7 @@ const express = require("express");
 const mysql = require("mysql2/promise");
 const dotenv = require("dotenv");
 const fs = require("fs");
+const path = require('path');
 
 dotenv.config({ path: './.env' });
 
@@ -15,7 +16,7 @@ const pool = mysql.createPool({
   database: process.env.DB_DATABASE,
   port: 3306,
   ssl: {
-    ca: fs.readFileSync("C:/Users/Hp/OneDrive/Desktop/try/node-mysql/DigiCertGlobalRootCA.crt.pem")
+    ca: fs.readFileSync(path.resolve(__dirname, "DigiCertGlobalRootCA.crt.pem"))
   }
 });
 
