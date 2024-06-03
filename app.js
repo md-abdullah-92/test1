@@ -15,7 +15,7 @@ const pool = mysql.createPool({
   database: process.env.DB_DATABASE,
   port: 3306,
   ssl: {
-    ca: fs.readFileSync("C:/Users/Hp/OneDrive/Desktop/node-mysql/DigiCertGlobalRootCA.crt.pem")
+    ca: fs.readFileSync("C:/Users/Hp/OneDrive/Desktop/try/node-mysql/DigiCertGlobalRootCA.crt.pem")
   }
 });
 
