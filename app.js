@@ -58,6 +58,28 @@ const getResultBySemester = async (req, res, semester) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+app.get('/EIINInfo', async (req, res) => {
+  const {eiin } = req.query;
+
+  // Validate inputs
+  if (!eiin) {
+    res.status(400).json({ error: 'Bad Request: Registration number and date of birth are required' });
+    return;
+  }
+
+  try {
+    const results = await queryAsync('SELECT * FROM Institution WHERE eiin = ?', [eiin]);
+
+    if (results.length === 0) {
+      res.status(404).json({ error: 'EIIN Number not found' });
+    } else {
+      res.json(results);
+    }
+  } catch (error) {
+    console.error('Error executing MySQL query:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 // Define routes
 app.get('/StudentInfo', async (req, res) => {
