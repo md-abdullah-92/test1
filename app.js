@@ -34,6 +34,31 @@ const queryAsync = async (sql, values) => {
   }
 };
 
+// POST endpoint to handle incoming data
+app.post("/create", async (req, res) => {
+  try {
+    // Extract data from the request body
+    const { phone, eiin,paasword } = req.body;
+    
+    // Perform necessary validations on the data if needed
+
+    // Example SQL query to insert data into a database table
+    const sql = "INSERT INTO InstitutionDetails (phone, eiin,paasword) VALUES (?, ?, ?)";
+    const values = [phone, eiin,paasword];
+
+    // Execute the SQL query - you'll need to implement your own queryAsync function
+    // For instance, using a MySQL library such as mysql2
+    await queryAsync(sql, values);
+
+    // Send a success response
+    res.status(200).json({ message: "Data inserted successfully" });
+  } catch (error) {
+    // Send an error response if something goes wrong
+    console.error("Error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 
 // Function to handle result retrieval
 const getResultBySemester = async (req, res, semester) => {
