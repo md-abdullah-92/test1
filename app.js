@@ -38,7 +38,7 @@ const queryAsync = async (sql, values) => {
 app.post("/create", async (req, res) => {
   try {
     // Extract data from the request body
-    const { phone, eiin,paasword } = req.body;
+    const { phone, eiin,password } = req.body;
     
     // Perform necessary validations on the data if needed
 
