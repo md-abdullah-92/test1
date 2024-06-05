@@ -43,7 +43,7 @@ app.post("/create", async (req, res) => {
     // Perform necessary validations on the data if needed
 
     // Example SQL query to insert data into a database table
-    const sql = "INSERT INTO InstitutionDetails (phone, eiin,paasword) VALUES (?, ?, ?)";
+    const sql = "INSERT INTO InstitutionDetails (phone, eiin,password) VALUES (?, ?, ?)";
     const values = [phone, eiin,paasword];
 
     // Execute the SQL query - you'll need to implement your own queryAsync function
